@@ -1,11 +1,11 @@
 from pwn import remote
 import re
 
-connect = remote("127.0.0.1", 50976)
+connect = remote("127.0.0.1", 51994)
 
 while True:
     try:
-        expression = connect.recvuntil(b"=").decode().strip()
+        expression = connect.recvuntil(b"=").decode().strip().rstrip("=")
         print(f"表达式: {expression}")
 
         expression = expression.replace("/", "//")
@@ -20,7 +20,7 @@ while True:
         else:
             result = "无效"
 
-        connect.sendline(str(result).encode())
+        connect.send(str(result).encode())
 
     except EOFError:
         print("EoFError.")
