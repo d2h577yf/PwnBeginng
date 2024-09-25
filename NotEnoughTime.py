@@ -5,7 +5,7 @@ connect = remote("127.0.0.1", 50976)
 
 while True:
     try:
-        expression = connect.recvline().decode().strip()
+        expression = connect.recvuntil(b"=").decode().strip()
         print(f"表达式: {expression}")
 
         expression = expression.replace("/", "//")
@@ -20,7 +20,7 @@ while True:
         else:
             result = "无效"
 
-        connect.sendline(str(result))
+        connect.sendline(str(result).encode())
 
     except EOFError:
         print("EoFError.")
@@ -28,4 +28,3 @@ while True:
     except Exception as e:
         print(f"EoFError: {e}")
         break
-
