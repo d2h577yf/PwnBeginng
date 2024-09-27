@@ -1,31 +1,32 @@
-from pwn import remote
-import re
+from pwn import remote, context
 
-connect = remote("127.0.0.1", 49538)
+context.log_level = "debug"
+connect = remote("127.0.0.1", 49665)
+
+expressionnull = connect.recvuntil("ones.")
 
 while True:
     try:
-        # 接收并解码表达式
-        expression = connect.recvline().decode().strip()
+        # 接收
+        expression = connect.recvuntil(b"=").decode().strip()
         print(f"表达式: {expression}")
-
-        # 去掉等号和空格，并且替换除法符号
         expression = expression.replace("=", "").replace(" ", "").replace("/", "//")
 
-        # 检查是否是有效的数学表达式
-        if re.match(r"^[\d\+\-\*//()]+$", expression):
+        filtered_expression = "".join(
+            filter(lambda c: c in "0123456789+*-()//\\", expression)
+        )
+
+        if filtered_expression:
             try:
-                # 计算表达式
-                result = eval(expression)
+                result = eval(filtered_expression)
                 print(f"结果: {result}")
+                connect.sendline(str(result).encode())
             except Exception as e:
                 print(f"错误表达式: {e}")
-                result = "Error"
+                connect.sendline(b"Error")
         else:
-            result = "无效表达式"
-
-        # 发送计算结果
-        connect.send(str(result).encode())
+            print("无效表达式")
+            connect.sendline(b"null")
 
     except EOFError:
         print("EoFError.")
@@ -33,3 +34,4 @@ while True:
     except Exception as e:
         print(f"错误: {e}")
         break
+
